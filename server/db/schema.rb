@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_03_29_230013) do
+ActiveRecord::Schema[7.0].define(version: 2026_03_30_030823) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -22,6 +22,9 @@ ActiveRecord::Schema[7.0].define(version: 2026_03_29_230013) do
     t.string "secret_number"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "difficulty"
+    t.string "player_secret_number"
+    t.integer "ai_attempts_count"
     t.index ["user_id"], name: "index_games_on_user_id"
   end
 
@@ -32,6 +35,9 @@ ActiveRecord::Schema[7.0].define(version: 2026_03_29_230013) do
     t.integer "cows"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "ai_guess"
+    t.integer "ai_bulls"
+    t.integer "ai_cows"
     t.index ["game_id"], name: "index_guesses_on_game_id"
   end
 
