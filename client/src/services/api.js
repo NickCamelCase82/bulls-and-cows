@@ -24,7 +24,11 @@ export const authService = {
 };
 
 export const gameService = {
-    createGame: (mode) => api.post('/games', { mode }),
+    createGame: (mode, difficulty, playerSecretNumber) => api.post('/games', {
+        mode,
+        difficulty,
+        player_secret_number: playerSecretNumber,
+    }),
     makeGuess: (gameId, number) => api.post(`/games/${gameId}/guess`, { number }),
 };
 

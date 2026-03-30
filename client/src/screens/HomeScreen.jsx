@@ -5,6 +5,7 @@ import {
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
+    Modal,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { userService, gameService } from '../services/api';
@@ -13,6 +14,8 @@ const HomeScreen = ({ navigation }) => {
     const { user, logout } = useAuth();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [showDifficultyModal, setShowDifficultyModal] = useState(false);
+    const [selectedMode, setSelectedMode] = useState(null);
 
     useEffect(() => {
         loadProfile();
@@ -27,11 +30,20 @@ const HomeScreen = ({ navigation }) => {
         }
     };
 
-    const startGame = async (mode) => {
+    const handleModeSelect = (mode) => {
+        setSelectedMode(mode);
+        setShowDifficultyModal(true);
+    };
+
+    const startGame = async (difficulty) => {
+        setShowDifficultyModal(false);
         try {
             setLoading(true);
-            const response = await gameService.createGame(mode);
-            navigation.navigate('Game', { gameId: response.data.id, mode });
+            const response = await gameService.createGame(selectedMode, difficulty);
+            navigation.navigate('SetSecretNumber', {
+                mode: selectedMode,
+                difficulty,
+            });
         } catch (error) {
             console.error('Error starting game:', error);
         } finally {
@@ -68,7 +80,7 @@ const HomeScreen = ({ navigation }) => {
 
             <TouchableOpacity
                 style={styles.button}
-                onPress={() => startGame('vs_ai')}
+                onPress={() => handleModeSelect('vs_ai')}
                 disabled={loading}>
                 {loading ? (
                     <ActivityIndicator color="#fff" />
@@ -82,7 +94,7 @@ const HomeScreen = ({ navigation }) => {
 
             <TouchableOpacity
                 style={[styles.button, styles.buttonSecondary]}
-                onPress={() => startGame('vs_player')}
+                onPress={() => handleModeSelect('vs_player')}
                 disabled={loading}>
                 <Text style={styles.buttonText}>👥 Play vs Player</Text>
                 <Text style={styles.buttonSubtext}>Coming soon</Text>
@@ -97,6 +109,44 @@ const HomeScreen = ({ navigation }) => {
             <TouchableOpacity style={styles.logoutButton} onPress={logout}>
                 <Text style={styles.logoutText}>Logout</Text>
             </TouchableOpacity>
+
+            <Modal
+                visible={showDifficultyModal}
+                transparent
+                animationType="slide">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalTitle}>Select Difficulty</Text>
+
+                        <TouchableOpacity
+                            style={[styles.difficultyButton, styles.easy]}
+                            onPress={() => startGame('easy')}>
+                            <Text style={styles.difficultyTitle}>😊 Easy</Text>
+                            <Text style={styles.difficultyDesc}>AI guesses randomly</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.difficultyButton, styles.medium]}
+                            onPress={() => startGame('medium')}>
+                            <Text style={styles.difficultyTitle}>🤔 Medium</Text>
+                            <Text style={styles.difficultyDesc}>AI eliminates based on feedback</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.difficultyButton, styles.hard]}
+                            onPress={() => startGame('hard')}>
+                            <Text style={styles.difficultyTitle}>😈 Hard</Text>
+                            <Text style={styles.difficultyDesc}>AI uses optimal strategy</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.cancelButton}
+                            onPress={() => setShowDifficultyModal(false)}>
+                            <Text style={styles.cancelText}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -197,6 +247,56 @@ const styles = StyleSheet.create({
     logoutText: {
         color: '#999',
         fontSize: 14,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContainer: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 24,
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    difficultyButton: {
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+    },
+    easy: {
+        backgroundColor: '#4CAF50',
+    },
+    medium: {
+        backgroundColor: '#FF9800',
+    },
+    hard: {
+        backgroundColor: '#f44336',
+    },
+    difficultyTitle: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    difficultyDesc: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 13,
+        marginTop: 4,
+    },
+    cancelButton: {
+        padding: 16,
+        alignItems: 'center',
+    },
+    cancelText: {
+        color: '#999',
+        fontSize: 16,
     },
 });
 
