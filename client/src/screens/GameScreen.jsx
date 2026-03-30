@@ -7,11 +7,12 @@ import {
     StyleSheet,
     FlatList,
     Alert,
+    ScrollView,
 } from 'react-native';
 import { gameService } from '../services/api';
 
 const GameScreen = ({ route, navigation }) => {
-    const { gameId } = route.params;
+    const { gameId, mode, difficulty } = route.params;
     const [guess, setGuess] = useState('');
     const [guesses, setGuesses] = useState([]);
     const [attemptsLeft, setAttemptsLeft] = useState(10);
@@ -27,12 +28,13 @@ const GameScreen = ({ route, navigation }) => {
         try {
             setLoading(true);
             const response = await gameService.makeGuess(gameId, guess);
-            const { bulls, cows, attempts_left, result, secret_number } = response.data;
+            const { bulls, cows, attempts_left, result, secret_number, ai_guess } = response.data;
 
             setGuesses(prev => [{
                 number: guess,
                 bulls,
                 cows,
+                ai_guess,
             }, ...prev]);
 
             setGuess('');
@@ -44,9 +46,15 @@ const GameScreen = ({ route, navigation }) => {
                 ]);
             } else if (result === 'loss') {
                 setGameOver(true);
-                Alert.alert('😞 Game Over', `The secret number was ${secret_number}`, [
-                    { text: 'Play Again', onPress: () => navigation.replace('Home') }
-                ]);
+                if (ai_guess?.result === 'loss') {
+                    Alert.alert('😞 AI Won!', `The AI guessed your number! Secret number was ${secret_number}`, [
+                        { text: 'Play Again', onPress: () => navigation.replace('Home') }
+                    ]);
+                } else {
+                    Alert.alert('😞 Game Over', `The secret number was ${secret_number}`, [
+                        { text: 'Play Again', onPress: () => navigation.replace('Home') }
+                    ]);
+                }
             } else {
                 setAttemptsLeft(attempts_left);
             }
@@ -59,11 +67,25 @@ const GameScreen = ({ route, navigation }) => {
 
     const renderGuess = ({ item }) => (
         <View style={styles.guessRow}>
-            <Text style={styles.guessNumber}>{item.number}</Text>
-            <View style={styles.guessResult}>
-                <Text style={styles.bulls}>🐂 {item.bulls}</Text>
-                <Text style={styles.cows}>🐄 {item.cows}</Text>
+            <View style={styles.guessSection}>
+                <Text style={styles.sectionLabel}>You</Text>
+                <Text style={styles.guessNumber}>{item.number}</Text>
+                <View style={styles.guessResult}>
+                    <Text style={styles.bulls}>🐂 {item.bulls}</Text>
+                    <Text style={styles.cows}>🐄 {item.cows}</Text>
+                </View>
             </View>
+
+            {item.ai_guess && (
+                <View style={[styles.guessSection, styles.aiSection]}>
+                    <Text style={styles.sectionLabel}>AI</Text>
+                    <Text style={styles.guessNumber}>{item.ai_guess.guess}</Text>
+                    <View style={styles.guessResult}>
+                        <Text style={styles.bulls}>🐂 {item.ai_guess.bulls}</Text>
+                        <Text style={styles.cows}>🐄 {item.ai_guess.cows}</Text>
+                    </View>
+                </View>
+            )}
         </View>
     );
 
@@ -71,7 +93,7 @@ const GameScreen = ({ route, navigation }) => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.attempts}>Attempts left: {attemptsLeft}</Text>
-                <Text style={styles.hint}>Guess the 4 digit number</Text>
+                <Text style={styles.difficulty}>Difficulty: {difficulty}</Text>
                 <Text style={styles.hint}>🐂 Bull = right digit, right position</Text>
                 <Text style={styles.hint}>🐄 Cow = right digit, wrong position</Text>
             </View>
@@ -121,7 +143,13 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         color: '#333',
+        marginBottom: 4,
+    },
+    difficulty: {
+        fontSize: 14,
+        color: '#666',
         marginBottom: 8,
+        textTransform: 'capitalize',
     },
     hint: {
         fontSize: 13,
@@ -165,26 +193,40 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
         borderWidth: 1,
         borderColor: '#ddd',
     },
+    guessSection: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    aiSection: {
+        borderLeftWidth: 1,
+        borderLeftColor: '#ddd',
+    },
+    sectionLabel: {
+        fontSize: 12,
+        color: '#999',
+        marginBottom: 4,
+        fontWeight: 'bold',
+    },
     guessNumber: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
         letterSpacing: 4,
         color: '#333',
+        marginBottom: 4,
     },
     guessResult: {
         flexDirection: 'row',
-        gap: 16,
+        gap: 8,
     },
     bulls: {
-        fontSize: 18,
+        fontSize: 16,
         color: '#4CAF50',
     },
     cows: {
-        fontSize: 18,
+        fontSize: 16,
         color: '#FF9800',
     },
     emptyText: {

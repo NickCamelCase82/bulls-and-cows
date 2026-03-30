@@ -7,6 +7,7 @@ import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import GameScreen from '../screens/GameScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
+import SetSecretNumberScreen from "../screens/SetSecretNumberScreen";
 
 const Stack = createStackNavigator();
 
@@ -20,6 +21,7 @@ const AuthStack = () => (
 const AppStack = () => (
     <Stack.Navigator>
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="SetSecretNumber" component={SetSecretNumberScreen} options={{ title: 'Your Secret Number' }} />
         <Stack.Screen name="Game" component={GameScreen} />
         <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
     </Stack.Navigator>
