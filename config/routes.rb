@@ -7,4 +7,7 @@ Rails.application.routes.draw do
       post :guess
     end
   end
+
+  get '/leaderboard', to: 'leaderboard#index'
+  get '/profile', to: 'users#profile'
 end
